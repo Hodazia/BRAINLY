@@ -62,7 +62,17 @@ app.post("/api/v1/content", userMiddleware, async (req, res) => {
     res.json({ message: "Content added" }); // Send success response.
 });
 
+app.get("/api/v1/content", userMiddleware, async (req,res) => {
+    //@ts-ignore
+    const userId = req.userId;
+    const content = await ContentModel.find({
+        userId:userId
+    }).populate("userId", "username");
+    res.json({
+        content
+    })
 
+})
 
 // Start the server
 app.listen(3000, () => {

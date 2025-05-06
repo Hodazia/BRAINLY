@@ -32,10 +32,15 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.LinkModel = exports.ContentModel = exports.UserModel = void 0;
 // Importing the required modules and functions from Mongoose
 const mongoose_1 = __importStar(require("mongoose"));
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
 // Connecting to the MongoDB database using a connection string
 mongoose_1.default.connect("mongodb://localhost:27017/BRAINLY_2");
 // Defining a schema for the 'User' collection

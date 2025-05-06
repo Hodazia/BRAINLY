@@ -1,8 +1,10 @@
 // Importing the required modules and functions from Mongoose
 import mongoose, { model, Schema } from "mongoose";
+import dotenv from 'dotenv'
 
+dotenv.config()
 // Connecting to the MongoDB database using a connection string
-mongoose.connect(`${process.env.MONGODB_URL}`);
+mongoose.connect("mongodb://localhost:27017/BRAINLY_2");
 
 // Defining a schema for the 'User' collection
 // Each user will have a unique 'username' and a 'password'
