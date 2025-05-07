@@ -49,19 +49,22 @@ app.post("/api/v1/signin", async (req, res) => {
 
 // Route 3: Add Content
 app.post("/api/v1/content", userMiddleware, async (req, res) => {
-    const { link, type, title } = req.body;
-    // Create a new content entry linked to the logged-in user.
+    const link = req.body.link;
+    const type = req.body.type;
     await ContentModel.create({
         link,
         type,
-        title,
+        title: req.body.title,
         //@ts-ignore
-        userId: req.userId, // userId is added by the middleware.
-        tags: [] // Initialize tags as an empty array.
-    });
+        userId: req.userId,
+        tags: []
+    })
 
-    res.json({ message: "Content added" }); // Send success response.
-});
+    res.json({
+        message: "Content added"
+    })
+    
+})
 
 app.get("/api/v1/content", userMiddleware, async (req,res) => {
     //@ts-ignore
@@ -92,46 +95,77 @@ app.delete("/api/v1/content", userMiddleware, async (req, res) => {
 
 // share can be either true or false, once true returns a link from linkSchema,
 app.post("/api/v1/brain/share", userMiddleware, async (req, res) => {
-    //@ts-ignore
-    const share = req.body.share
-    if (share)
-    {
-        await LinkModel.create({
-            //@ts-ignore
-            userId:req.userId,
-            hash:random(10)
-        })
-    }
-    else {
+    const share = req.body.share;
+    if (share) {
+            const existingLink = await LinkModel.findOne({
+                //@ts-ignore
+                userId: req.userId
+            });
+
+            if (existingLink) {
+                res.json({
+                    hash: existingLink.hash
+                })
+                return;
+            }
+            const hash = random(10);
+            await LinkModel.create({
+                //@ts-ignore
+                userId: req.userId,
+                hash: hash
+            })
+
+            res.json({
+                hash
+            })
+    } else {
         await LinkModel.deleteOne({
             //@ts-ignore
-            userId:req.userId
+            userId: req.userId
+        });
+
+        res.json({
+            message: "Removed link"
         })
     }
-    res.json({message: "updated sharable link"})
 })
 
-app.get("/api/v1/brain/:shareLink" , userMiddleware ,async (req,res) => {
+app.get("/api/v1/brain/:shareLink", async (req, res) => {
     const hash = req.params.shareLink;
 
     const link = await LinkModel.findOne({
         hash
+    });
+
+    if (!link) {
+        res.status(411).json({
+            message: "Sorry incorrect input"
+        })
+        return;
+    }
+    // userId
+    const content = await ContentModel.find({
+        userId: link.userId
     })
 
-    if(!link)
-    {
+    console.log(link);
+    const user = await UserModel.findOne({
+        _id: link.userId
+    })
+
+    if (!user) {
         res.status(411).json({
-            message:"Sorry incorrect input"
+            message: "user not found, error should ideally not happen"
         })
-        return
+        return;
     }
 
-    //userId
-    const content = await ContentModel.find({
-        userId: link.user
+    res.json({
+        username: user.username,
+        content: content
     })
-})
 
+})
 
 // Start the server
 app.listen(3000, () => {
