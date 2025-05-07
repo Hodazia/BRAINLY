@@ -42,7 +42,7 @@ const mongoose_1 = __importStar(require("mongoose"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 // Connecting to the MongoDB database using a connection string
-mongoose_1.default.connect("mongodb://localhost:27017/BRAINLY_2");
+mongoose_1.default.connect("mongodb://localhost:27017/BRAINLY_SEC");
 // Defining a schema for the 'User' collection
 // Each user will have a unique 'username' and a 'password'
 const UserSchema = new mongoose_1.Schema({

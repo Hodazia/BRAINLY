@@ -1,8 +1,9 @@
 import express from "express";
 import jwt from "jsonwebtoken";
-import { UserModel, ContentModel } from "./db";
+import { UserModel, ContentModel, LinkModel } from "./db";
 import { JWT_SECRET } from "./config";
 import { userMiddleware } from "./middleware";
+import { random } from "./utils";
 
 
 const app = express();
@@ -20,7 +21,7 @@ app.post("/api/v1/signup", async (req, res) => {
         // Create a new user with the provided username and password.
         await UserModel.create({ 
             username: username, 
-            passowrd: password });
+            password: password });
         
         res.json({ message: "User signed up" }); // Send success response.
     } catch (e) {
@@ -73,6 +74,64 @@ app.get("/api/v1/content", userMiddleware, async (req,res) => {
     })
 
 })
+
+
+app.delete("/api/v1/content", userMiddleware, async (req, res) => {
+    const contentId = req.body.contentId;
+
+    await ContentModel.deleteMany({
+        contentId,
+        //@ts-ignore
+        userId: req.userId
+    })
+
+    res.json({
+        message: "Deleted"
+    })
+})
+
+// share can be either true or false, once true returns a link from linkSchema,
+app.post("/api/v1/brain/share", userMiddleware, async (req, res) => {
+    //@ts-ignore
+    const share = req.body.share
+    if (share)
+    {
+        await LinkModel.create({
+            //@ts-ignore
+            userId:req.userId,
+            hash:random(10)
+        })
+    }
+    else {
+        await LinkModel.deleteOne({
+            //@ts-ignore
+            userId:req.userId
+        })
+    }
+    res.json({message: "updated sharable link"})
+})
+
+app.get("/api/v1/brain/:shareLink" , userMiddleware ,async (req,res) => {
+    const hash = req.params.shareLink;
+
+    const link = await LinkModel.findOne({
+        hash
+    })
+
+    if(!link)
+    {
+        res.status(411).json({
+            message:"Sorry incorrect input"
+        })
+        return
+    }
+
+    //userId
+    const content = await ContentModel.find({
+        userId: link.user
+    })
+})
+
 
 // Start the server
 app.listen(3000, () => {
