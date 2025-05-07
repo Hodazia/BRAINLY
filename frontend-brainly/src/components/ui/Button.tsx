@@ -9,7 +9,7 @@ interface ButtonProps {
     text: string;
     startIcon?: ReactElement;  // any should not be used, it could be arrays, strings, numbers
     endIcon?: ReactElement;
-    onClick: () => void;
+    onClick?: () => void;
 }
 
 // Mapping button variants to their respective CSS classes
