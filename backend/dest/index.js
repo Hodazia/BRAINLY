@@ -14,6 +14,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
 const db_1 = require("./db");
 const config_1 = require("./config");
 const middleware_1 = require("./middleware");
@@ -21,6 +23,7 @@ const utils_1 = require("./utils");
 const app = (0, express_1.default)();
 app.use(express_1.default.json()); // Middleware to parse JSON request bodies.
 //app.use(cors()); // Middleware to allow cross-origin requests.
+//console.log(`${process.env.MONGO_URL}`);
 // Route 1: User Signup
 app.post("/api/v1/signup", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // TODO: Use zod or a similar library for input validation.
@@ -31,7 +34,7 @@ app.post("/api/v1/signup", (req, res) => __awaiter(void 0, void 0, void 0, funct
         // Create a new user with the provided username and password.
         yield db_1.UserModel.create({
             username: username,
-            passowrd: password
+            password: password
         });
         res.json({ message: "User signed up" }); // Send success response.
     }
@@ -58,17 +61,19 @@ app.post("/api/v1/signin", (req, res) => __awaiter(void 0, void 0, void 0, funct
 }));
 // Route 3: Add Content
 app.post("/api/v1/content", middleware_1.userMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { link, type, title } = req.body;
-    // Create a new content entry linked to the logged-in user.
+    const link = req.body.link;
+    const type = req.body.type;
     yield db_1.ContentModel.create({
         link,
         type,
-        title,
+        title: req.body.title,
         //@ts-ignore
-        userId: req.userId, // userId is added by the middleware.
-        tags: [] // Initialize tags as an empty array.
+        userId: req.userId,
+        tags: []
     });
-    res.json({ message: "Content added" }); // Send success response.
+    res.json({
+        message: "Content added"
+    });
 }));
 app.get("/api/v1/content", middleware_1.userMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     //@ts-ignore
@@ -93,13 +98,26 @@ app.delete("/api/v1/content", middleware_1.userMiddleware, (req, res) => __await
 }));
 // share can be either true or false, once true returns a link from linkSchema,
 app.post("/api/v1/brain/share", middleware_1.userMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    //@ts-ignore
     const share = req.body.share;
     if (share) {
+        const existingLink = yield db_1.LinkModel.findOne({
+            //@ts-ignore
+            userId: req.userId
+        });
+        if (existingLink) {
+            res.json({
+                hash: existingLink.hash
+            });
+            return;
+        }
+        const hash = (0, utils_1.random)(10);
         yield db_1.LinkModel.create({
             //@ts-ignore
             userId: req.userId,
-            hash: (0, utils_1.random)(10)
+            hash: hash
+        });
+        res.json({
+            hash
         });
     }
     else {
@@ -107,8 +125,40 @@ app.post("/api/v1/brain/share", middleware_1.userMiddleware, (req, res) => __awa
             //@ts-ignore
             userId: req.userId
         });
+        res.json({
+            message: "Removed link"
+        });
     }
-    res.json({ message: "updated sharable link" });
+}));
+app.get("/api/v1/brain/:shareLink", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const hash = req.params.shareLink;
+    const link = yield db_1.LinkModel.findOne({
+        hash
+    });
+    if (!link) {
+        res.status(411).json({
+            message: "Sorry incorrect input"
+        });
+        return;
+    }
+    // userId
+    const content = yield db_1.ContentModel.find({
+        userId: link.userId
+    });
+    console.log(link);
+    const user = yield db_1.UserModel.findOne({
+        _id: link.userId
+    });
+    if (!user) {
+        res.status(411).json({
+            message: "user not found, error should ideally not happen"
+        });
+        return;
+    }
+    res.json({
+        username: user.username,
+        content: content
+    });
 }));
 // Start the server
 app.listen(3000, () => {

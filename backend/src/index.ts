@@ -1,15 +1,17 @@
 import express from "express";
 import jwt from "jsonwebtoken";
+import dotenv from 'dotenv'
+
+dotenv.config()
 import { UserModel, ContentModel, LinkModel } from "./db";
 import { JWT_SECRET } from "./config";
 import { userMiddleware } from "./middleware";
 import { random } from "./utils";
 
-
 const app = express();
 app.use(express.json()); // Middleware to parse JSON request bodies.
 //app.use(cors()); // Middleware to allow cross-origin requests.
-
+//console.log(`${process.env.MONGO_URL}`);
 // Route 1: User Signup
 app.post("/api/v1/signup", async (req, res) => {
     // TODO: Use zod or a similar library for input validation.

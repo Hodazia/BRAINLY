@@ -4,7 +4,8 @@ import dotenv from 'dotenv'
 
 dotenv.config()
 // Connecting to the MongoDB database using a connection string
-mongoose.connect("mongodb://localhost:27017/BRAINLY_SEC");
+mongoose.connect(
+`${process.env.MONGO_URL}`).then(() => console.log("DB Connected!"));
 
 // Defining a schema for the 'User' collection
 // Each user will have a unique 'username' and a 'password'
