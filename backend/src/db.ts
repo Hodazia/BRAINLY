@@ -19,10 +19,12 @@ export const UserModel = model("User", UserSchema);
 
 // Defining a schema for the 'Content' collection
 // Each content will have a 'title', a 'Link', an array of 'tags', and a reference to a 'userId'
+// add a type of 'String' it is left out, 
 const ContentSchema = new Schema({
     title: String,                          // Title of the content
     Link: String,                           // URL or link to the content
     tags: [{ type: mongoose.Types.ObjectId, ref: "tag" }], // Array of tag IDs, referencing the 'tag' collection
+    type: String,
     userId: [{ 
         type: mongoose.Types.ObjectId, 
         ref: "User", 
